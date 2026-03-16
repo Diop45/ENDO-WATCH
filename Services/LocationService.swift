@@ -11,6 +11,7 @@ final class LocationService: NSObject {
 
     var currentCoordinate: CLLocationCoordinate2D?
     var currentTractID: String = ""
+    var latestEnvironmental: EnvironmentalSnapshot?
 
     // Injected dependencies
     private let liveDataService: LiveDataService
@@ -62,6 +63,7 @@ final class LocationService: NSObject {
     func runPipeline(coordinate: CLLocationCoordinate2D) async {
         let snapshot = await liveDataService.fetchAll(coordinate: coordinate)
         currentTractID = snapshot.tractID
+        latestEnvironmental = snapshot
 
         let input = FusionInput(
             heartRate:       streamService?.heartRate       ?? 0,

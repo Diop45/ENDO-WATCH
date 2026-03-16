@@ -14,7 +14,7 @@ class WatchZoneViewModel {
 
     private let liveDataService = LiveDataService()
     private let fusionEngine    = ZoneFusionEngine()
-    private let locationService: LocationService
+    private(set) var locationService: LocationService
 
     // MARK: - Legacy motion service (activity icon)
 
@@ -45,22 +45,31 @@ class WatchZoneViewModel {
         locationService.streamService = streamService
     }
 
-    // MARK: - Computed bridge properties (used by WatchMapView HUD)
+    // MARK: - Computed bridge properties (used by WatchMapView, WatchZoneCompassView)
 
     var currentZone: ZoneClassification {
         dataStore.personalPin?.zone ?? .moderate
     }
 
-    var zoneColor: Color {
-        currentZone.color
-    }
+    var zoneColor: Color { currentZone.color }
+
+    var compositeScore: Int { dataStore.personalPin?.compositeScore ?? 0 }
+
+    var dominantSignal: String { dataStore.personalPin?.dominantSignal ?? "Heart Rate" }
+
+    // Live biometrics from stream
+    var heartRate: Double  { streamService.heartRate }
+    var hrv: Double        { streamService.hrv }
+    var noiseLevel: Double { streamService.noiseLevel }
+
+    // Environmental from latest pipeline run
+    var aqi: Int { locationService.latestEnvironmental?.aqi ?? 0 }
 
     var activityIconName: String {
         motion.iconName(for: motion.currentActivity)
     }
 
-    // MARK: - Computed biometric (used by WatchHUDView if still referenced)
-
+    // Computed BiometricReading for legacy WatchHUDView compatibility
     var currentBiometric: BiometricReading {
         BiometricReading(
             heartRate:       streamService.heartRate,
