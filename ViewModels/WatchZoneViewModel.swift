@@ -1,116 +1,109 @@
 import Foundation
 import CoreLocation
-import HealthKit
 import MapKit
 
 @Observable
+@MainActor
 class WatchZoneViewModel {
 
-    // MARK: - Published State
+    // MARK: - New pipeline services
 
-    var currentZone: ZoneClassification = .moderate
-    var zonePins: [ZonePin] = []
-    var currentBiometric: BiometricReading = .mock
-    var currentEnvironmental: EnvironmentalReading = .mock
+    let streamService  = BiometricStreamService()
+    let dataStore      = MapDataStore()
+    let shareService   = AnonymousShareService()
+
+    private let liveDataService = LiveDataService()
+    private let fusionEngine    = ZoneFusionEngine()
+    private let locationService: LocationService
+
+    // MARK: - Legacy motion service (activity icon)
+
+    let motion = WatchMotionService()
+
+    // MARK: - Map state
+
     var cameraPosition: MapCameraPosition = .automatic
 
-    // MARK: - Services
-
-    let healthKit = WatchHealthKitService()
-    let motion    = WatchMotionService()
-
-    private let classifier = ZoneClassifierService()
-
-    // Detroit center — replaced with live location when CoreLocation is wired in
     private(set) var userCoordinate = CLLocationCoordinate2D(
         latitude: 42.3314,
         longitude: -83.0458
     )
 
-    // MARK: - Computed
+    // MARK: - Init
+
+    init() {
+        let live    = liveDataService
+        let fusion  = fusionEngine
+        let store   = dataStore
+        let share   = shareService
+        locationService = LocationService(
+            liveDataService: live,
+            fusionEngine: fusion,
+            dataStore: store,
+            shareService: share
+        )
+        locationService.streamService = streamService
+    }
+
+    // MARK: - Computed bridge properties (used by WatchMapView HUD)
+
+    var currentZone: ZoneClassification {
+        dataStore.personalPin?.zone ?? .moderate
+    }
+
+    var zoneColor: Color {
+        currentZone.color
+    }
 
     var activityIconName: String {
         motion.iconName(for: motion.currentActivity)
     }
 
+    // MARK: - Computed biometric (used by WatchHUDView if still referenced)
+
+    var currentBiometric: BiometricReading {
+        BiometricReading(
+            heartRate:       streamService.heartRate,
+            hrv:             streamService.hrv,
+            spo2:            streamService.spo2,
+            respiratoryRate: streamService.respiratoryRate,
+            timestamp:       streamService.lastUpdated,
+            source:          .appleWatch
+        )
+    }
+
     // MARK: - Lifecycle
 
     func start() async {
-        await healthKit.requestAuthorization()
         motion.start()
-        seedMockZonePins()
+        streamService.startStreaming()
+        locationService.startTracking()
         centerCamera()
-        reclassify()
+
+        // Start neighborhood pin refresh loop
+        dataStore.startNeighborhoodRefresh(coordinate: userCoordinate)
+
+        // Run initial pipeline pass with Detroit default if location not yet available
+        await locationService.runPipeline(coordinate: userCoordinate)
     }
 
     func stop() {
         motion.stop()
-    }
-
-    // MARK: - Classification
-
-    func reclassify() {
-        if healthKit.isAuthorized {
-            currentBiometric = healthKit.latestReading
-        }
-        currentZone = classifier.classifyZone(
-            biometric: currentBiometric,
-            environmental: currentEnvironmental
-        )
+        streamService.stopStreaming()
+        locationService.stopTracking()
+        dataStore.stopNeighborhoodRefresh()
     }
 
     // MARK: - Camera
 
     private func centerCamera() {
+        let coord = locationService.currentCoordinate ?? userCoordinate
         cameraPosition = .region(
             MKCoordinateRegion(
-                center: userCoordinate,
+                center: coord,
                 latitudinalMeters: 3200,
                 longitudinalMeters: 3200
             )
         )
-    }
-
-    // MARK: - Mock Data (Detroit block-level zone pins)
-
-    private func seedMockZonePins() {
-        zonePins = [
-            ZonePin(
-                coordinate: CLLocationCoordinate2D(latitude: 42.338, longitude: -83.052),
-                classification: .hostile,
-                environmentalScore: 0.72,
-                biometricScore: 0.61
-            ),
-            ZonePin(
-                coordinate: CLLocationCoordinate2D(latitude: 42.327, longitude: -83.038),
-                classification: .moderate,
-                environmentalScore: 0.44,
-                biometricScore: 0.38
-            ),
-            ZonePin(
-                coordinate: CLLocationCoordinate2D(latitude: 42.318, longitude: -83.055),
-                classification: .supportive,
-                environmentalScore: 0.18,
-                biometricScore: 0.22
-            ),
-            ZonePin(
-                coordinate: CLLocationCoordinate2D(latitude: 42.342, longitude: -83.041),
-                classification: .hostile,
-                environmentalScore: 0.81,
-                biometricScore: 0.55
-            ),
-            ZonePin(
-                coordinate: CLLocationCoordinate2D(latitude: 42.324, longitude: -83.048),
-                classification: .supportive,
-                environmentalScore: 0.22,
-                biometricScore: 0.19
-            ),
-            ZonePin(
-                coordinate: CLLocationCoordinate2D(latitude: 42.333, longitude: -83.062),
-                classification: .moderate,
-                environmentalScore: 0.51,
-                biometricScore: 0.41
-            )
-        ]
     }
 }
