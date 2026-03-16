@@ -121,6 +121,76 @@ class LiveDataService {
         )
     }
 
+    // MARK: - Backend proxy (preferred over direct API calls in production)
+
+    /// Fetches all environmental signals through the ENDO backend in a single request.
+    /// Falls back to `fetchAll(coordinate:)` if the backend is unreachable or not configured.
+    func fetchAllFromBackend(coordinate: CLLocationCoordinate2D, tractID: String = "") async -> EnvironmentalSnapshot {
+        let base = Config.backendBaseURL
+        guard !base.hasPrefix("https://your-backend") else {
+            // Backend not configured yet — fall through to direct API calls
+            return await fetchAll(coordinate: coordinate)
+        }
+
+        var components = URLComponents(string: base + "/environmental")
+        components?.queryItems = [
+            .init(name: "lat",     value: String(coordinate.latitude)),
+            .init(name: "lon",     value: String(coordinate.longitude)),
+            .init(name: "tractId", value: tractID),
+        ]
+        guard let url = components?.url else {
+            return await fetchAll(coordinate: coordinate)
+        }
+
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+                return await fetchAll(coordinate: coordinate)
+            }
+
+            struct BackendEnvResponse: Codable {
+                var aqi: Int
+                var pm25: Double
+                var tempF: Double
+                var humidity: Double
+                var weatherDescription: String
+                var diabetesPrevalence: Double
+                var obesityPrevalence: Double
+                var tractId: String
+                var facilityCount: Int
+            }
+
+            let decoded = try JSONDecoder().decode(BackendEnvResponse.self, from: data)
+
+            let hi = steadmanHeatIndex(tempF: decoded.tempF, humidity: decoded.humidity)
+            // Resource density: normalise facilityCount 0–20 → 0–100
+            let density = min(Double(decoded.facilityCount) / 20.0 * 100.0, 100.0)
+
+            return EnvironmentalSnapshot(
+                aqi:                decoded.aqi,
+                pm25:               decoded.pm25,
+                heatIndex:          hi,
+                resourceDensity:    density,
+                tractID:            decoded.tractId,
+                aqiCategory:        aqiCategoryLabel(aqi: decoded.aqi),
+                weatherDescription: decoded.weatherDescription
+            )
+        } catch {
+            return await fetchAll(coordinate: coordinate)
+        }
+    }
+
+    private func aqiCategoryLabel(aqi: Int) -> String {
+        switch aqi {
+        case 0...50:   return "Good"
+        case 51...100: return "Moderate"
+        case 101...150: return "Unhealthy for Sensitive Groups"
+        case 151...200: return "Unhealthy"
+        case 201...300: return "Very Unhealthy"
+        default:        return "Hazardous"
+        }
+    }
+
     // MARK: - 1. EPA AirNow
 
     func fetchAQI(coordinate: CLLocationCoordinate2D) async -> (aqi: Int, pm25: Double, category: String) {

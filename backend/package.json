@@ -1,0 +1,20 @@
+{
+  "name": "endo-backend",
+  "version": "1.0.0",
+  "description": "ENDO World backend — env data proxy, pin aggregation, zone alerts",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev":   "node --watch server.js"
+  },
+  "engines": { "node": ">=20.0.0" },
+  "dependencies": {
+    "axios":              "^1.7.0",
+    "better-sqlite3":     "^9.6.0",
+    "dotenv":             "^16.4.0",
+    "express":            "^4.19.0",
+    "express-rate-limit":  "^7.3.0",
+    "express-validator":   "^7.2.0",
+    "node-cache":          "^5.1.2"
+  }
+}
