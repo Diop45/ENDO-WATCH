@@ -24,7 +24,7 @@ final class LocationService: NSObject {
 
     private let manager = CLLocationManager()
     private var lastPipelineRunTime: Date = .distantPast
-    private let minimumUpdateInterval: TimeInterval = 30
+    private let minimumUpdateInterval: TimeInterval = 60
 
     // MARK: - Init
 
@@ -39,9 +39,11 @@ final class LocationService: NSObject {
         self.dataStore       = dataStore
         self.shareService    = shareService
         super.init()
-        manager.delegate          = self
-        manager.desiredAccuracy   = kCLLocationAccuracyNearestTenMeters
-        manager.distanceFilter    = 50  // trigger on ~50 m change
+        manager.delegate                      = self
+        manager.desiredAccuracy               = kCLLocationAccuracyBestForNavigation
+        manager.distanceFilter                = 10   // update every 10 meters
+        manager.activityType                  = .fitness
+        manager.allowsBackgroundLocationUpdates = false
         manager.pausesLocationUpdatesAutomatically = false
     }
 
