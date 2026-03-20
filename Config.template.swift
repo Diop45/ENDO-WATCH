@@ -1,6 +1,6 @@
 // Config.template.swift
 //
-// Copy this file to Config.swift, fill in your keys, and build.
+// Copy this file to ENDO WORLD Watch App/Config.swift, fill in your keys, and build.
 // Config.swift is in .gitignore and must NEVER be committed to source control.
 //
 // Usage in code: Config.airNowAPIKey, Config.openWeatherAPIKey, Config.backendBaseURL
