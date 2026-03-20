@@ -4,7 +4,7 @@ import SwiftUI
 struct ENDOWatchApp: App {
     var body: some Scene {
         WindowGroup {
-            DashboardView()
+            WatchHomeView()
         }
     }
 }
