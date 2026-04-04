@@ -342,9 +342,8 @@
 				DEVELOPMENT_TEAM = 88YLQH34W2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "ENDO reads your biometric data to show how your environment is affecting your body.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "ENDO writes condition exposure events to Apple Health.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "ENDO uses your location to show your environmental health zone and neighborhood condition map.";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -369,9 +368,8 @@
 				DEVELOPMENT_TEAM = 88YLQH34W2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "ENDO reads your biometric data to show how your environment is affecting your body.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "ENDO writes condition exposure events to Apple Health.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "ENDO uses your location to show your environmental health zone and neighborhood condition map.";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

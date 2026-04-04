@@ -1,43 +1,34 @@
 import SwiftUI
-import UIKit
 
 struct ContentView: View {
-    @State private var appState = AppState()
-    @State private var connectivity = WatchConnectivityService()
-    @State private var locationService = LocationService()
+    @Environment(AppRouter.self) private var router
 
     var body: some View {
-        TabView {
-            TodayView()
-                .tabItem {
-                    Label("Today", systemImage: "house.fill")
+        @Bindable var router = router
+        ZStack(alignment: .bottom) {
+            Color.bgPrimary.ignoresSafeArea()
+
+            Group {
+                switch router.selectedTab {
+                case .today: TodayView()
+                case .vitals: VitalsView()
+                case .map: MapView()
+                case .health: HealthView()
                 }
-            VitalsView()
-                .tabItem {
-                    Label("Vitals", systemImage: "waveform.path.ecg")
-                }
-            MapTabView()
-                .tabItem {
-                    Label("Map", systemImage: "map.fill")
-                }
-            MyHealthView()
-                .tabItem {
-                    Label("My Health", systemImage: "chart.bar.fill")
-                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            ENDOTabBar(selected: $router.selectedTab)
         }
-        .tint(Color.endoCyan)
-        .preferredColorScheme(.dark)
-        .environment(appState)
-        .onAppear {
-            let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor(red: 28/255, green: 28/255, blue: 32/255, alpha: 1)
-            appearance.shadowColor = UIColor.white.withAlphaComponent(0.07)
-            appearance.shadowImage = UIImage()
-            UITabBar.appearance().standardAppearance = appearance
-            UITabBar.appearance().scrollEdgeAppearance = appearance
-            connectivity.appState = appState
-            locationService.appState = appState
-        }
+        .ignoresSafeArea(.keyboard)
     }
+}
+
+#Preview {
+    let appState = AppState()
+    let router = AppRouter()
+    router.onboardingComplete = true
+    return ContentView()
+        .environment(appState)
+        .environment(router)
 }

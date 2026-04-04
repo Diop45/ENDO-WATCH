@@ -1,65 +1,45 @@
+import CoreLocation
 import Foundation
 import SwiftUI
-import CoreLocation
 
-enum HealthArea: String, CaseIterable {
-    case cardiovascular
-    case environmental
-    case sleep
-    case stress
-    case activity
-    case neighborhood
-}
-
-struct ConditionEvent: Identifiable {
-    let id = UUID()
-    let time: Date
-    let condition: String
-    let severity: ZoneClassification
-    let location: String
-    let distance: String
-}
-
-struct ENDORoute: Identifiable {
-    let id = UUID()
-    let label: String
-    let avgScore: Int
-    let worstCondition: String
-    let suggestedAlternative: String?
-}
-
-@Observable
-@MainActor
+@Observable @MainActor
 final class AppState {
-
-    var compositeScore: Int = 72
-    var zoneClassification: ZoneClassification = .moderate
-    var heartRate: Double = 72
-    var hrv: Double = 42
-    var spo2: Double = 98
-    var noiseLevel: Double = 54
-    var aqi: Int = 48
-    var pm25: Double = 12.4
+    var zoneScore: Int = 74
+    var zone: ZoneClassification = .supportive
     var dominantSignal: String = "Air Quality"
-    var userCoordinate: CLLocationCoordinate2D?
-    var heatIndex: Double = 75
+    var aqi: Int = 38
+    var pm25: Double = 12.4
+    var noiseDB: Int = 54
+    var heatF: Int = 78
 
-    var biometricLoadScore: Int { max(0, min(100, 100 - Int(heartRate - 60) - Int(40 - hrv / 2))) }
-    var environmentalScore: Int { max(0, min(100, 100 - aqi / 2 - Int(pm25))) }
-    var sleepScore: Int = 78
-    var activityScore: Int = 71
-    var stressScore: Int = 65
+    var hr: Double = 72
+    var hrv: Double = 48
+    var spo2: Double = 97
+    var rr: Double = 14
 
-    var healthAreaScores: [HealthArea: Int] = [
-        .cardiovascular: 75,
-        .environmental: 72,
-        .sleep: 78,
-        .stress: 65,
-        .activity: 71,
-        .neighborhood: 82
-    ]
+    var atmosphericBackground: Color {
+        if zone == .hostile {
+            return Color(hex: "#1A0808")
+        }
+        if hrv < 25 {
+            return Color(hex: "#180808")
+        }
+        if hr > 100 {
+            return Color(hex: "#1A0A08")
+        }
+        return Color.bgPrimary
+    }
 
-    var conditionExposureHistory: [ConditionEvent] = []
-    var routeHistory: [ENDORoute] = []
-    var neighborhoodPinCount: Int = 7
+    var selectedConditions: Set<String> = []
+    var enabledSignals: Set<String> = ["env", "bio", "move"]
+    var scanStreak: Int = 5
+    var totalXP: Int = 340
+
+    var mapEntryPoint: MapEntryPoint = .normal
+
+    enum MapEntryPoint {
+        case normal, proximityAlert
+    }
+
+    var peekNode: HealthNode?
 }
