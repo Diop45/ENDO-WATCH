@@ -6,26 +6,32 @@ extension View {
         fg: Color = .cyanCTA
     ) -> some View {
         self
-            .font(.system(size: 16, weight: .semibold))
+            .font(.system(size: 15, weight: .semibold))
             .foregroundStyle(fg)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 15)
+            .padding(.vertical, 13)
             .background(bg)
             .clipShape(Capsule())
     }
 
     func secondaryCTA() -> some View {
         self
-            .font(.system(size: 14))
+            .font(.system(size: 13))
             .foregroundStyle(.white.opacity(0.55))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+            .padding(.vertical, 12)
             .background(.white.opacity(0.05))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .clipShape(
+                RoundedRectangle(
+                    cornerRadius: 10,
+                    style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(.white.opacity(0.1), lineWidth: 0.5)
-            )
+                RoundedRectangle(
+                    cornerRadius: 10,
+                    style: .continuous)
+                    .strokeBorder(
+                        .white.opacity(0.1),
+                        lineWidth: 0.5))
     }
 
     func endoCard(
@@ -35,16 +41,20 @@ extension View {
     ) -> some View {
         self
             .background(bg)
-            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .clipShape(
+                RoundedRectangle(
+                    cornerRadius: radius,
+                    style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .strokeBorder(border, lineWidth: 0.5)
-            )
+                RoundedRectangle(
+                    cornerRadius: radius,
+                    style: .continuous)
+                    .strokeBorder(border, lineWidth: 0.5))
     }
 
     func capsLabel() -> some View {
         self
-            .font(.system(size: 10, weight: .medium))
+            .font(.system(size: 9, weight: .medium))
             .foregroundStyle(.white.opacity(0.35))
             .kerning(1.2)
             .textCase(.uppercase)

@@ -3,21 +3,23 @@ import SwiftUI
 @main
 struct ENDOWorldApp: App {
     @State private var appState = AppState()
-    @State private var router = AppRouter()
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if router.onboardingComplete {
-                    ContentView()
-                        .environment(appState)
-                        .environment(router)
-                } else {
-                    OnboardingCoordinator()
-                        .environment(appState)
-                        .environment(router)
-                }
-            }
+            AppTabRootView()
+                .environment(appState)
+                .frame(
+                    minWidth: 0,
+                    maxWidth: .infinity,
+                    minHeight: 0,
+                    maxHeight: .infinity)
+                .ignoresSafeArea()
         }
     }
+}
+
+#Preview("Launch (same as MapRoot)") {
+    AppTabRootView()
+        .environment(AppState())
+        .preferredColorScheme(.dark)
 }

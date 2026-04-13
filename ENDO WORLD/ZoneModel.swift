@@ -1,4 +1,3 @@
-import Foundation
 import SwiftUI
 
 enum ZoneClassification: String, Codable {
@@ -14,15 +13,12 @@ enum ZoneClassification: String, Codable {
         }
     }
 
-    var bgTint: Color {
-        color.opacity(0.08)
-    }
+    var bgTint: Color { color.opacity(0.08) }
+    var borderTint: Color { color.opacity(0.22) }
 
-    var borderTint: Color {
-        color.opacity(0.22)
-    }
-
-    static func from(score: Int) -> ZoneClassification {
+    static func from(_ score: Int)
+        -> ZoneClassification
+    {
         score >= 66 ? .supportive
             : score >= 35 ? .moderate
             : .hostile

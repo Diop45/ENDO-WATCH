@@ -1,21 +1,41 @@
-import CoreLocation
 import Foundation
 import SwiftUI
 
 @Observable @MainActor
 final class AppState {
+    private static let mapIntroDismissedKey = "endo.mapIntro.dismissed"
+
+    /// First-launch map control explainer; cleared after `acknowledgeMapIntro()`.
+    var showMapIntro: Bool
+
     var zoneScore: Int = 74
-    var zone: ZoneClassification = .supportive
-    var dominantSignal: String = "Air Quality"
+    var zone: ZoneClassification = .moderate
     var aqi: Int = 38
     var pm25: Double = 12.4
     var noiseDB: Int = 54
     var heatF: Int = 78
 
-    var hr: Double = 72
-    var hrv: Double = 48
-    var spo2: Double = 97
-    var rr: Double = 14
+    var biometricStream = BiometricStreamService()
+
+    /// Heart rate (bpm) from live `BiometricStreamService` polling.
+    var hr: Double {
+        Double(biometricStream.currentHR)
+    }
+
+    /// HRV (ms) from live `BiometricStreamService` polling.
+    var hrv: Double {
+        biometricStream.currentHRV
+    }
+
+    /// SpO₂ (percent) from live `BiometricStreamService` polling.
+    var spo2: Double {
+        biometricStream.currentSpO2
+    }
+
+    /// Respiratory rate from Apple Health periodic refresh (not 5s stream).
+    var rr: Double
+
+    private let appleHealth = AppleHealthMetricsProvider()
 
     var atmosphericBackground: Color {
         if zone == .hostile {
@@ -30,16 +50,40 @@ final class AppState {
         return Color.bgPrimary
     }
 
-    var selectedConditions: Set<String> = []
-    var enabledSignals: Set<String> = ["env", "bio", "move"]
-    var scanStreak: Int = 5
-    var totalXP: Int = 340
+    init() {
+        showMapIntro = !UserDefaults.standard.bool(
+            forKey: Self.mapIntroDismissedKey)
+        let d = HealthSnapshot.defaults
+        rr = d.respiratoryRatePerMin
 
-    var mapEntryPoint: MapEntryPoint = .normal
+        appleHealth.onSnapshot = { [weak self] snap in
+            guard let self else { return }
+            self.rr = snap.respiratoryRatePerMin
+        }
 
-    enum MapEntryPoint {
-        case normal, proximityAlert
+        biometricStream.start()
     }
 
-    var peekNode: HealthNode?
+    /// Requests HealthKit read access for respiratory rate and refreshes RR.
+    func startAppleHealthDataIntegration() async {
+        let snap = HealthSnapshot(
+            heartRateBpm: hr,
+            heartRateVariabilityMs: hrv,
+            oxygenSaturationPercent: spo2,
+            respiratoryRatePerMin: rr)
+        await appleHealth.requestAccessAndStartUpdates(
+            initialSnapshot: snap)
+    }
+
+    /// Pulls the latest samples from HealthKit (e.g. after returning from Health or Settings).
+    func refreshAppleHealthData() async {
+        await appleHealth.refreshFromHealthKit()
+    }
+
+    func acknowledgeMapIntro() {
+        UserDefaults.standard.set(
+            true,
+            forKey: Self.mapIntroDismissedKey)
+        showMapIntro = false
+    }
 }

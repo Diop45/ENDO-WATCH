@@ -11,7 +11,6 @@ struct ENDOFriend: Identifiable {
     var score: Int
     var lastSeen: Date
     var color: Color
-
     var isInDanger: Bool { zone == .hostile }
 
     var zoneText: String {

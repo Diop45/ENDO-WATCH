@@ -4,8 +4,11 @@ import SwiftUI
 struct ENDOWatchApp: App {
     var body: some Scene {
         WindowGroup {
-            Text("ENDO")
-                .font(.headline)
+            WatchRootView()
         }
     }
+}
+
+#Preview {
+    WatchRootView()
 }

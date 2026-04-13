@@ -7,6 +7,7 @@ const { initDb }   = require('./services/pinStore');
 const pins         = require('./routes/pins');
 const environmental = require('./routes/environmental');
 const alerts       = require('./routes/alerts');
+const map          = require('./routes/map');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -40,6 +41,7 @@ app.use(rateLimit({
 app.use('/api/pins',          pins);
 app.use('/api/environmental', environmental);
 app.use('/api/alerts',        alerts);
+app.use('/api/map',           map);
 
 app.get('/health', (_req, res) =>
     res.json({ status: 'ok', ts: new Date().toISOString() })
